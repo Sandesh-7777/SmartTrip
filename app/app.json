@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "SmartTrip",
+    "slug": "smarttrip",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "smarttrip",
+    "ios": {
+      "bundleIdentifier": "com.smarttrip.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.smarttrip.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#2563EB"
+      }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}
