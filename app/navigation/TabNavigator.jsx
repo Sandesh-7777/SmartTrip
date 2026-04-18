@@ -18,6 +18,8 @@ import GroupsScreen from '../screens/group/GroupsScreen';
 import GroupDetailScreen from '../screens/group/GroupDetailScreen';
 import ExpenseScreen from '../screens/expense/ExpenseScreen';
 import GroupExpensesScreen from '../screens/expense/GroupExpensesScreen';
+import SplitBillScreen from '../screens/expense/SplitBillScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const TripStack = createStackNavigator();
@@ -78,6 +80,7 @@ function GroupStackNavigator() {
       <GroupStack.Screen name="GroupsList" component={GroupsScreen} />
       <GroupStack.Screen name="GroupDetail" component={GroupDetailScreen} />
       <GroupStack.Screen name="GroupExpenses" component={GroupExpensesScreen} />
+      <GroupStack.Screen name="SplitBill" component={SplitBillScreen} />
     </GroupStack.Navigator>
   );
 }
@@ -119,8 +122,8 @@ export default function TabNavigator() {
       <Tab.Screen name="Groups" component={GroupStackNavigator}
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👥" label="Groups" focused={focused} /> }}
       />
-      <Tab.Screen name="Profile" component={ExpenseStackNavigator}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💰" label="Expenses" focused={focused} /> }}
+      <Tab.Screen name="Profile" component={ProfileScreen}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Expenses" focused={focused} /> }}
       />
     </Tab.Navigator>
   );
