@@ -27,6 +27,7 @@ const BookingStack = createStackNavigator();
 const PackageStack = createStackNavigator();
 const GroupStack = createStackNavigator();
 const ExpenseStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
 const PlaceholderScreen = ({ route }) => (
   <View style={styles.placeholder}>
@@ -81,6 +82,7 @@ function GroupStackNavigator() {
       <GroupStack.Screen name="GroupDetail" component={GroupDetailScreen} />
       <GroupStack.Screen name="GroupExpenses" component={GroupExpensesScreen} />
       <GroupStack.Screen name="SplitBill" component={SplitBillScreen} />
+      <GroupStack.Screen name="Expenses" component={ExpenseScreen} />
     </GroupStack.Navigator>
   );
 }
@@ -90,6 +92,15 @@ function ExpenseStackNavigator() {
     <ExpenseStack.Navigator screenOptions={{ headerShown: false }}>
       <ExpenseStack.Screen name="ExpenseHome" component={ExpenseScreen} />
     </ExpenseStack.Navigator>
+  );
+}
+
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="Expenses" component={ExpenseScreen} />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -122,9 +133,12 @@ export default function TabNavigator() {
       <Tab.Screen name="Groups" component={GroupStackNavigator}
         options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👥" label="Groups" focused={focused} /> }}
       />
-      <Tab.Screen name="Profile" component={ProfileScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Expenses" focused={focused} /> }}
+      <Tab.Screen name="Profile" component={ProfileStackNavigator}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} /> }}
       />
+      {/* <Tab.Screen name="Expenses" component={ExpenseScreen} 
+      options={{ tabBarButton: () => null, tabBarStyle: { display: 'none' }, }}
+      /> */}
     </Tab.Navigator>
   );
 }

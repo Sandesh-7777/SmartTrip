@@ -131,27 +131,27 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const statCards = [
-    {
-      label: 'Trips', value: stats.trips, icon: '🗺️',
-      onPress: () => navigation.navigate('Trips'),
-    },
-    {
-      label: 'Bookings', value: stats.bookings, icon: '🎫',
-      onPress: () => navigation.navigate('Bookings', { screen: 'MyBookings' }),
-    },
-    {
-      label: 'Expenses', value: stats.expenses, icon: '💸',
-      onPress: () => navigation.navigate('Expenses'),
-    },
-    {
-      label: 'Spent',
-      value: stats.spent >= 1000
-        ? `₹${(stats.spent / 1000).toFixed(1)}k`
-        : `₹${stats.spent}`,
-      icon: '💰',
-      onPress: () => navigation.navigate('Expenses'),
-    },
-  ];
+  {
+    label: 'Trips', value: stats.trips, icon: '🗺️',
+    onPress: () => navigation.navigate('Trips', { screen: 'TripsList' }),
+  },
+  {
+    label: 'Bookings', value: stats.bookings, icon: '🎫',
+    onPress: () => navigation.navigate('Bookings', { screen: 'MyBookings' }),
+  },
+  {
+    label: 'Expenses', value: stats.expenses, icon: '💸',
+    onPress: () => navigation.navigate('Expenses'),
+  },
+  {
+    label: 'Spent',
+    value: stats.spent >= 1000
+      ? `₹${(stats.spent / 1000).toFixed(1)}k`
+      : `₹${stats.spent}`,
+    icon: '💰',
+    onPress: () => navigation.navigate('Expenses'),
+  },
+];
 
   const menuSections = [
     {
@@ -176,7 +176,8 @@ export default function ProfileScreen({ navigation }) {
       items: [
         {
           icon: 'map-outline', label: 'My Trips',
-          onPress: () => navigation.navigate('Trips'), type: 'action',
+          onPress: () => navigation.navigate('Trips', { screen: 'TripsList' }),
+          type: 'action',
         },
         {
           icon: 'ticket-outline', label: 'My Bookings',
@@ -185,15 +186,18 @@ export default function ProfileScreen({ navigation }) {
         },
         {
           icon: 'wallet-outline', label: 'My Expenses',
-          onPress: () => navigation.navigate('Expenses'), type: 'action',
+          onPress: () => navigation.navigate('Expenses'),
+          type: 'action',
         },
         {
           icon: 'people-outline', label: 'My Groups',
-          onPress: () => navigation.navigate('Groups'), type: 'action',
+          onPress: () => navigation.navigate('Groups', { screen: 'GroupsList' }),
+          type: 'action',
         },
         {
           icon: 'cube-outline', label: 'My Packages',
-          onPress: () => navigation.navigate('Packages'), type: 'action',
+          onPress: () => navigation.navigate('Packages', { screen: 'PackagesList' }),
+          type: 'action',
         },
       ],
     },

@@ -15,6 +15,7 @@ import {
   addExpense, getUserExpenses,
   deleteExpense, getExpenseSummary, CATEGORIES
 } from '../../services/expenseService';
+import { categorizeExpense } from '../../services/aiService';
 
 const formatDate = (date) => {
   const d = String(date.getDate()).padStart(2, '0');
@@ -56,35 +57,49 @@ export default function ExpenseScreen({ navigation }) {
   useFocusEffect(useCallback(() => { loadExpenses(); }, []));
 
   const handleAdd = async () => {
-    if (!title || !amount || !category) {
-      Alert.alert('Missing Info', 'Please fill in title, amount and category.');
+    if (!title || !amount) {
+      Alert.alert('Missing Info', 'Please fill in title and amount.');
       return;
     }
     if (isNaN(Number(amount)) || Number(amount) <= 0) {
       Alert.alert('Invalid Amount', 'Please enter a valid amount.');
       return;
     }
-    setAdding(true);
+
+    // Auto-categorize if no category selected
+    let finalCategory = category;
+    if (!finalCategory) {
+      try {
+        const aiCategory = await categorizeExpense(title, amount);
+        const validCat = CATEGORIES.find((c) => c.label === aiCategory);
+        finalCategory = validCat ? aiCategory : 'Other';
+      } catch {
+        finalCategory = 'Other';
+      }
+    }
+
+    setSaving(true);
     try {
-      await addExpense(user.uid, {
+      await addExpense({
+        user_id: user.uid,
         title,
         amount: Number(amount),
-        category,
+        category: finalCategory,
         paid_by: user.uid,
         paid_by_name: user.displayName || 'You',
         date,
         notes,
-        is_group_expense: false,
+        is_personal: true,
         split_among: [],
       });
-      setAddModal(false);
       resetForm();
+      setAddModal(false);
       loadExpenses();
     } catch (err) {
       console.log('Add expense error:', err);
       Alert.alert('Error', 'Failed to add expense. Please try again.');
     } finally {
-      setAdding(false);
+      setSaving(false);
     }
   };
 
@@ -290,7 +305,7 @@ export default function ExpenseScreen({ navigation }) {
               </View>
 
               {/* Category */}
-              <Text style={styles.modalLabel}>Category *</Text>
+              <Text style={styles.modalLabel}>Category{' '} <Text style={{ color: COLORS.gray, fontWeight: '400' }}> (optional — AI will auto-detect) </Text> </Text>
               <View style={styles.categoryGrid}>
                 {CATEGORIES.map((cat) => (
                   <TouchableOpacity

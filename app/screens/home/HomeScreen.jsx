@@ -8,6 +8,9 @@ import { COLORS } from '../../constants';
 import { auth } from '../../constants/firebase';
 import { logoutUser } from '../../services/authService';
 import { mockPackages } from '../../services/packageService';
+import { useState, useEffect } from 'react';
+import { generateTripSuggestions } from '../../services/aiService';
+import { ActivityIndicator } from 'react-native';
 
 const categories = [
   { id: 1, icon: '🏨', label: 'Hotels', tab: 'Bookings', screen: 'Hotels' },
@@ -33,6 +36,29 @@ const quickActions = [
 export default function HomeScreen({ navigation }) {
   const user = auth.currentUser;
   const firstName = user?.displayName?.split(' ')[0] || 'Traveler';
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
+
+  useEffect(() => {
+    loadAISuggestions();
+  }, []);
+
+  const loadAISuggestions = async () => {
+    try {
+      const result = await generateTripSuggestions({
+        budget: 10000,
+        duration: '3-5',
+        type: 'Leisure',
+        season: 'Any',
+        fromCity: 'Mumbai',
+      });
+      setAiSuggestions(result.suggestions || []);
+    } catch (err) {
+      console.log('AI suggestions error:', err);
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -105,13 +131,51 @@ export default function HomeScreen({ navigation }) {
             ))}
           </View>
 
-          {/* Popular Destinations */}
+          {/* AI Trip Suggestions */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Destinations</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>See all</Text>
+            <View>
+              <Text style={styles.sectionTitle}>AI Suggestions ✨</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Trips', { screen: 'TripPlanner' })}>
+              <Text style={styles.seeAll}>Plan Trip</Text>
             </TouchableOpacity>
           </View>
+
+          {suggestionsLoading ? (
+            <View style={styles.suggestionsLoading}>
+              <ActivityIndicator color={COLORS.primary} size="small" />
+              <Text style={styles.suggestionsLoadingText}>AI finding best trips for you...</Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.horizontalScroll}
+            >
+              {(aiSuggestions.length > 0 ? aiSuggestions : popularDestinations).map((dest, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.destinationCard}
+                  onPress={() => navigation.navigate('Trips', { screen: 'TripPlanner' })}
+                >
+                  <LinearGradient colors={['#1E40AF', '#3B82F6']} style={styles.destinationGradient}>
+                    <Text style={styles.destinationEmoji}>{dest.emoji || '🌍'}</Text>
+                  </LinearGradient>
+                  <View style={styles.destinationInfo}>
+                    <Text style={styles.destinationName}>
+                      {dest.destination || dest.name}
+                    </Text>
+                    <Text style={styles.destinationTag}>
+                      {dest.tagline || dest.tag}
+                    </Text>
+                    <Text style={styles.destinationPrice}>
+                      {dest.estimatedCost || dest.price}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
           <ScrollView
             horizontal
@@ -460,4 +524,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#92400E',
   },
+  suggestionsLoading: {
+  flexDirection: 'row', alignItems: 'center',
+  gap: 10, paddingVertical: 20,
+  backgroundColor: COLORS.white, borderRadius: 14,
+  paddingHorizontal: 16, marginBottom: 28,
+  },
+  suggestionsLoadingText: { fontSize: 13, color: COLORS.gray },
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, TextInput, ScrollView
@@ -8,11 +8,30 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants';
 import { mockPackages, CATEGORIES } from '../../services/packageService';
+import { generatePackageRecommendations } from '../../services/aiService';
 
 export default function PackagesScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [sortBy, setSortBy] = useState('trending');
+  const [aiRecs, setAiRecs] = useState([]);
+
+  useEffect(() => {
+    loadAIRecs();
+  }, []);
+
+  const loadAIRecs = async () => {
+    try {
+      const result = await generatePackageRecommendations({
+        interests: ['Beach', 'Mountain'],
+        budget: 12000,
+        style: 'Leisure',
+      });
+      setAiRecs(result.recommendations || []);
+    } catch (err) {
+      console.log('AI recs error:', err);
+    }
+  };
 
   const filtered = mockPackages
     .filter((p) => {
@@ -182,6 +201,27 @@ export default function PackagesScreen({ navigation }) {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          aiRecs.length > 0 ? (
+            <View style={styles.aiRecsCard}>
+              <Text style={styles.aiRecsTitle}>✨ AI Picks For You</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {aiRecs.map((rec, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={styles.aiRecChip}
+                    onPress={() => setCategory(rec.category)}
+                  >
+                    <Text style={styles.aiRecCategory}>{rec.category}</Text>
+                    <Text style={styles.aiRecDest}>→ {rec.topDestination}</Text>
+                    <Text style={styles.aiRecBudget}>{rec.estimatedBudget}</Text>
+                    <Text style={styles.aiRecReason} numberOfLines={2}>{rec.reason}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Text style={styles.emptyEmoji}>📦</Text>
@@ -301,4 +341,21 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: 'center', paddingTop: 60 },
   emptyEmoji: { fontSize: 52, marginBottom: 12 },
   emptyText: { fontSize: 16, color: COLORS.gray },
+  aiRecsCard: {
+  backgroundColor: COLORS.white, borderRadius: 20,
+  padding: 16, marginBottom: 16,
+  shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  aiRecsTitle: { fontSize: 15, fontWeight: 'bold', color: COLORS.black, marginBottom: 12 },
+  aiRecChip: {
+    backgroundColor: COLORS.primary + '10',
+    borderRadius: 16, padding: 14,
+    marginRight: 10, width: 160,
+    borderWidth: 1.5, borderColor: COLORS.primary + '30',
+  },
+  aiRecCategory: { fontSize: 14, fontWeight: 'bold', color: COLORS.primary, marginBottom: 4 },
+  aiRecDest: { fontSize: 13, fontWeight: '600', color: COLORS.black, marginBottom: 4 },
+  aiRecBudget: { fontSize: 11, color: COLORS.gray, marginBottom: 6 },
+  aiRecReason: { fontSize: 11, color: COLORS.gray, lineHeight: 16 },
 });

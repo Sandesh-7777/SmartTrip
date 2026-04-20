@@ -5,6 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../../constants';
+import { useState, useEffect } from 'react';
+import { ActivityIndicator } from 'react-native';
+import { generateItinerary } from '../../services/aiService';
 
 const tripTypeIcons = {
   Beach: '🏖️', Mountain: '🏔️', City: '🌆',
@@ -38,7 +41,36 @@ export default function ItineraryScreen({ navigation, route }) {
     return days;
   };
 
-  const days = getDays();
+const [aiDays, setAiDays] = useState(null);
+const [aiLoading, setAiLoading] = useState(true);
+const [aiError, setAiError] = useState(false);
+
+useEffect(() => {
+  loadAIItinerary();
+}, []);
+
+const loadAIItinerary = async () => {
+  try {
+    const generated = await generateItinerary(trip);
+    setAiDays(generated);
+  } catch (err) {
+    console.log('AI itinerary error:', err);
+    setAiError(true);
+  } finally {
+    setAiLoading(false);
+  }
+};
+
+const days = getDays();
+const itineraryDays = aiDays || days.map((d) => ({
+  ...d,
+  title: `Day ${d.day} Plan`,
+  activities: [
+    { time: 'Morning', icon: '🌅', activity: 'Check-in & Freshen up' },
+    { time: 'Afternoon', icon: '☀️', activity: 'Explore local attractions' },
+    { time: 'Evening', icon: '🌆', activity: 'Leisure & local dining' },
+  ],
+}));
 
   const summaryItems = [
     { icon: '👥', label: 'Travelers', value: trip.travelers },
@@ -105,17 +137,41 @@ export default function ItineraryScreen({ navigation, route }) {
 
         {/* Day-wise Itinerary */}
         <Text style={styles.sectionTitle}>Day-wise Itinerary</Text>
-        {days.map((day) => (
-          <View key={day.day} style={styles.dayCard}>
+
+        {aiLoading ? (
+          <View style={styles.aiLoadingBox}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+            <Text style={styles.aiLoadingText}>🤖 AI is building your itinerary...</Text>
+          </View>
+        ) : aiError ? (
+          <View style={styles.aiErrorBox}>
+            <Text style={styles.aiErrorText}>
+              ⚠️ Could not generate AI itinerary. Showing default plan.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.aiBadge}>
+            <Text style={styles.aiBadgeText}>✨ AI Generated Itinerary</Text>
+          </View>
+        )}
+
+        {itineraryDays.map((day, index) => (
+          <View key={index} style={styles.dayCard}>
             <LinearGradient colors={['#1D4ED8', '#3B82F6']} style={styles.dayBadge}>
               <Text style={styles.dayNum}>Day {day.day}</Text>
               <Text style={styles.dayDate}>{day.date}</Text>
             </LinearGradient>
             <View style={styles.dayContent}>
-              {daySlots.map((slot, i) => (
-                <View key={i} style={[styles.activityRow, i < daySlots.length - 1 && styles.activityBorder]}>
-                  <Text style={styles.activityIcon}>{slot.icon}</Text>
-                  <View>
+              {day.title ? (
+                <Text style={styles.dayTitle}>{day.title}</Text>
+              ) : null}
+              {(day.activities || []).map((slot, i) => (
+                <View key={i} style={[
+                  styles.activityRow,
+                  i < (day.activities.length - 1) && styles.activityBorder
+                ]}>
+                  <Text style={styles.activityIcon}>{slot.icon || '📍'}</Text>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.activityTime}>{slot.time}</Text>
                     <Text style={styles.activityText}>{slot.activity}</Text>
                   </View>
@@ -270,4 +326,26 @@ const styles = StyleSheet.create({
   },
   budgetTotalLabel: { fontSize: 14, fontWeight: 'bold', color: COLORS.black },
   budgetTotalValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.primary },
+  aiLoadingBox: {
+  alignItems: 'center', paddingVertical: 30,
+  backgroundColor: COLORS.white, borderRadius: 18,
+  marginBottom: 14, gap: 12,
+},
+aiLoadingText: { fontSize: 14, color: COLORS.gray, fontWeight: '600' },
+aiErrorBox: {
+  backgroundColor: '#FEF3C7', borderRadius: 12,
+  padding: 14, marginBottom: 14,
+},
+aiErrorText: { fontSize: 13, color: '#92400E' },
+aiBadge: {
+  backgroundColor: COLORS.primary + '15',
+  borderRadius: 20, paddingHorizontal: 14,
+  paddingVertical: 6, alignSelf: 'flex-start',
+  marginBottom: 14,
+},
+aiBadgeText: { fontSize: 12, color: COLORS.primary, fontWeight: '700' },
+dayTitle: {
+  fontSize: 14, fontWeight: 'bold',
+  color: COLORS.black, marginBottom: 10,
+},
 });
